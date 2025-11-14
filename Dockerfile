@@ -1,11 +1,6 @@
 ARG NODE_IMAGE_TAG=22.16-bookworm-slim
 ARG GOLANG_IMAGE_TAG=1.23-bookworm
 
-# (À ajouter avant l'étape de 'yarn install')
-RUN apt-get update && \
-    apt-get install -y build-essential python3 sqlite3 libsqlite3-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 #
 # Build
 #
@@ -56,14 +51,14 @@ RUN apt-get update && apt-get install -y wget unzip && rm -rf /var/lib/apt/lists
 
 COPY waha.config.json /tmp/waha.config.json
 RUN \
-    WAHA_DASHBOARD_GITHUB_REPO=$(jq -r '.waha.dashboard.repo' /tmp/waha.config.json) && \
-    WAHA_DASHBOARD_SHA=$(jq -r '.waha.dashboard.ref' /tmp/waha.config.json) && \
-    wget https://github.com/${WAHA_DASHBOARD_GITHUB_REPO}/archive/${WAHA_DASHBOARD_SHA}.zip \
-    && unzip ${WAHA_DASHBOARD_SHA}.zip -d /tmp/dashboard \
-    && mkdir -p /dashboard \
-    && mv /tmp/dashboard/dashboard-${WAHA_DASHBOARD_SHA}/* /dashboard/ \
-    && rm -rf ${WAHA_DASHBOARD_SHA}.zip \
-    && rm -rf /tmp/dashboard/dashboard-${WAHA_DASHBOARD_SHA}
+    WAHA_DASHBOARD_GITHUB_REPO=$(jq -r '.waha.dashboard.repo' /tmp/waha.config.json) && \
+    WAHA_DASHBOARD_SHA=$(jq -r '.waha.dashboard.ref' /tmp/waha.config.json) && \
+    wget https://github.com/${WAHA_DASHBOARD_GITHUB_REPO}/archive/${WAHA_DASHBOARD_SHA}.zip \
+    && unzip ${WAHA_DASHBOARD_SHA}.zip -d /tmp/dashboard \
+    && mkdir -p /dashboard \
+    && mv /tmp/dashboard/dashboard-${WAHA_DASHBOARD_SHA}/* /dashboard/ \
+    && rm -rf ${WAHA_DASHBOARD_SHA}.zip \
+    && rm -rf /tmp/dashboard/dashboard-${WAHA_DASHBOARD_SHA}
 
 ---
 
@@ -77,25 +72,25 @@ RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
 
 # install protoc
 RUN apt-get update && \
-    apt-get install protobuf-compiler -y
+    apt-get install protobuf-compiler -y
 
 # Image processing for thumbnails
-RUN apt-get update  \
-    && apt-get install -y libvips-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update  \
+    && apt-get install -y libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY waha.config.json /tmp/waha.config.json
 WORKDIR /go/gows
 RUN \
-    GOWS_GITHUB_REPO=$(jq -r '.waha.gows.repo' /tmp/waha.config.json) && \
-    GOWS_SHA=$(jq -r '.waha.gows.ref' /tmp/waha.config.json) && \
-    ARCH=$(uname -m) && \
-    if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; \
-    elif [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; \
-    else echo "Unsupported architecture: $ARCH" && exit 1; fi && \
-    mkdir -p /go/gows/bin && \
-    wget -O /go/gows/bin/gows https://github.com/${GOWS_GITHUB_REPO}/releases/download/${GOWS_SHA}/gows-${ARCH} && \
-    chmod +x /go/gows/bin/gows
+    GOWS_GITHUB_REPO=$(jq -r '.waha.gows.repo' /tmp/waha.config.json) && \
+    GOWS_SHA=$(jq -r '.waha.gows.ref' /tmp/waha.config.json) && \
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; \
+    elif [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; \
+    else echo "Unsupported architecture: $ARCH" && exit 1; fi && \
+    mkdir -p /go/gows/bin && \
+    wget -O /go/gows/bin/gows https://github.com/${GOWS_GITHUB_REPO}/releases/download/${GOWS_SHA}/gows-${ARCH} && \
+    chmod +x /go/gows/bin/gows
 
 ---
 
@@ -116,91 +111,91 @@ RUN echo "USE_BROWSER=$USE_BROWSER"
 RUN apt-get update && apt-get install -y ffmpeg --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 # Image processing for thumbnails
-RUN apt-get update  \
-    && apt-get install -y libvips \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update  \
+    && apt-get install -y libvips \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install zip and unzip - either for chromium or chrome
 RUN if [ "$USE_BROWSER" = "chromium" ] || [ "$USE_BROWSER" = "chrome" ]; then \
-    apt-get update  \
-    && apt-get install -y zip unzip \
-    && rm -rf /var/lib/apt/lists/*; \
-    fi
+    apt-get update  \
+    && apt-get install -y zip unzip \
+    && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # Install wget - either for chromium or chrome
 RUN if [ "$USE_BROWSER" = "chromium" ] || [ "$USE_BROWSER" = "chrome" ]; then \
-    apt-get update  \
-    && apt-get install -y wget \
-    && rm -rf /var/lib/apt/lists/*; \
-    fi
+    apt-get update  \
+    && apt-get install -y wget \
+    && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # Install fonts if using either chromium or chrome
 RUN if [ "$USE_BROWSER" = "chromium" ] || [ "$USE_BROWSER" = "chrome" ]; then \
-    apt-get update  \
-    && apt-get install -y \
-        fontconfig \
-        fonts-freefont-ttf \
-        fonts-gfs-neohellenic \
-        fonts-indic \
-        fonts-ipafont-gothic \
-        fonts-kacst \
-        fonts-liberation \
-        fonts-noto-cjk \
-        fonts-noto-color-emoji \
-        fonts-roboto \
-        fonts-thai-tlwg \
-        fonts-wqy-zenhei \
-        fonts-open-sans \
-      --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*; \
-    fi
+    apt-get update  \
+    && apt-get install -y \
+        fontconfig \
+        fonts-freefont-ttf \
+        fonts-gfs-neohellenic \
+        fonts-indic \
+        fonts-ipafont-gothic \
+        fonts-kacst \
+        fonts-liberation \
+        fonts-noto-cjk \
+        fonts-noto-color-emoji \
+        fonts-roboto \
+        fonts-thai-tlwg \
+        fonts-wqy-zenhei \
+        fonts-open-sans \
+      --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # Install xvfb, xauth
 RUN if [ "$USE_BROWSER" = "chromium" ] || [ "$USE_BROWSER" = "chrome" ]; then \
-    apt-get update && apt-get install -y --no-install-recommends \
-        xvfb \
-        xauth \
-        libnss3 \
-        libxss1 \
-        libasound2 \
-        libatk-bridge2.0-0 \
-        libgtk-3-0 \
-        libdrm2 \
-        ca-certificates \
-        && rm -rf /var/lib/apt/lists/*; \
-    fi
+    apt-get update && apt-get install -y --no-install-recommends \
+        xvfb \
+        xauth \
+        libnss3 \
+        libxss1 \
+        libasound2 \
+        libatk-bridge2.0-0 \
+        libgtk-3-0 \
+        libdrm2 \
+        ca-certificates \
+        && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # Install Chromium
 RUN if [ "$USE_BROWSER" = "chromium" ]; then \
-        apt-get update  \
-        && apt-get update \
-        && apt-get install -y chromium \
-          --no-install-recommends \
-        && rm -rf /var/lib/apt/lists/*; \
-    fi
+        apt-get update  \
+        && apt-get update \
+        && apt-get install -y chromium \
+          --no-install-recommends \
+        && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # Install Chrome
 # Available versions:
 # https://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable
 ARG CHROME_VERSION="140.0.7339.80-1"
 RUN if [ "$USE_BROWSER" = "chrome" ]; then \
-        wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
-          && apt-get update \
-          && apt install -y /tmp/chrome.deb \
-          && rm /tmp/chrome.deb \
-          && rm -rf /var/lib/apt/lists/*; \
-    fi
+        wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
+          && apt-get update \
+          && apt install -y /tmp/chrome.deb \
+          && rm /tmp/chrome.deb \
+          && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # curl
-RUN apt-get update  \
-    && apt-get install -y curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update  \
+    && apt-get install -y curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # GOWS requirements
 # libc6
-RUN  apt-get update \
-     && apt-get install -y libc6 \
-     && rm -rf /var/lib/apt/lists/*
+RUN  apt-get update \
+     && apt-get install -y libc6 \
+     && rm -rf /var/lib/apt/lists/*
 
 # Install tini for proper init process
 RUN apt-get update && apt-get install -y tini && rm -rf /var/lib/apt/lists/*
@@ -218,8 +213,8 @@ COPY --from=gows /go/gows/bin/gows /app/gows
 COPY .env.example ./.env.example
 COPY scripts/init-waha.js ./scripts/init-waha.js
 RUN chmod +x ./scripts/init-waha.js \
-  && printf '%s\n' '#!/bin/sh' 'exec node /app/scripts/init-waha.js "$@"' > /usr/local/bin/init-waha \
-  && chmod +x /usr/local/bin/init-waha
+  && printf '%s\n' '#!/bin/sh' 'exec node /app/scripts/init-waha.js "$@"' > /usr/local/bin/init-waha \
+  && chmod +x /usr/local/bin/init-waha
 ENV WAHA_GOWS_PATH=/app/gows
 ENV WAHA_GOWS_SOCKET=/tmp/gows.sock
 
