@@ -1,6 +1,11 @@
 ARG NODE_IMAGE_TAG=22.16-bookworm-slim
 ARG GOLANG_IMAGE_TAG=1.23-bookworm
 
+# (À ajouter avant l'étape de 'yarn install')
+RUN apt-get update && \
+    apt-get install -y build-essential python3 sqlite3 libsqlite3-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 #
 # Build
 #
